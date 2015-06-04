@@ -73,6 +73,9 @@
             doCustomValidity(orderForm.password, '');
             doCustomValidity(orderForm.confirm_password, '');
             doCustomValidity(orderForm.card_name, '');
+            if(!Modernizr.input.required || !Modernizr.input.pattern) {
+                fallbackValidation();
+            }
             if(orderForm.name.value.length < 4) {
                 doCustomValidity(
                     orderForm.name, 'Full Name must be at least 4 characters long.'    
@@ -102,6 +105,75 @@
             orderForm.className = 'invalid';
         };
         orderForm.addEventListener('invalid', styleInvalidForm, true);
+        Modernizr.load({
+            test: Modernizr.inputtypes.month,
+            nope: 'monthpicker.js'
+        });
+        var getFieldLabel = function(field) {
+            if('labels' in field && field.labels.length > 0) {
+                return field.labels[0].innerText;
+            }
+            if(field.parentNode && field.parentNode.tagName.toLowerCase() === 'label') {
+                return field.parentNode.innerText;
+            }
+            return '';
+        };
+        var submitForm = function(e) {
+            if(!saveBtnClicked) {
+                validateForm();
+                var i = 0,
+                    ln = orderForm.length,
+                    field,
+                    errors = [],
+                    errorFields = [],
+                    errorMsg = '';
+                for(;i<ln;i++) {
+                    field = orderForm[i];
+                    if((!!field.validationMessage && field.validationMessage.length > 0) || (!!field.checkValidity && !field.checkValidity())) {
+                        errors.push(
+                            getFieldLabel(field) + ': ' + field.validationMessage
+                        );
+                        errorFields.push(field);
+                    }
+                }
+                if (errors.length > 0) {
+                    e.preventDefault();
+                    errorMsg = errors.join('\n');
+                    alert('Please fix the following errors:\n' + errorMsg, 'Error');
+                    orderForm.className = 'invalid';
+                    errorFields[0].focus();
+                }
+            }
+        };
+        orderForm.addEventListener('submit', submitForm, false);
+        var fallbackValidation = function() {
+            var i = 0,
+                ln = orderForm.length,
+                field;
+            for(;i<ln;i++) {
+                field = orderForm[i];
+                doCustomValidity(field, '');
+                if(field.hasAttribute('pattern')) {
+                    var pattern = new RegExp(field.getAttribute('pattern').toString());
+                    if(!pattern.test(field.value)) {
+                        var msg = 'Please match the requested format.';
+                        if(field.hasAttribute('title') && field.getAttribute('title').length > 0) {
+                            msg += ' ' + field.getAttribute('title');
+                        }
+                        doCustomValidity(field, msg);
+                    }
+                }
+                if(field.hasAttribute('type') && field.getAttribute('type').toLowerCase() === 'email') {
+                    var pattern = new RegExp(/\S+@\S+\.\S+/);
+                    if(!pattern.test(field.value)) {
+                        doCustomValidity(field, 'Please enter an email address.');
+                    }
+                }
+                if(field.hasAttribute('required') && field.value.length < 1) {
+                    doCustomValidity(field, 'Please fill out the field.');
+                }
+            }
+        };
     };
     window.addEventListener('load', init, false);
 }());
