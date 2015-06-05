@@ -133,12 +133,12 @@
         if(requestFileSystem && storageInfo) {
             var checkQuota = function(currentUsage, quota) {
                 if(quota === 0) {
-                    storageInfo.requestQuota(stType, stSize, getFS, qmError);
+                    storageInfo.requestQuota(stSize, getFS, qmError);
                 } else {
                     getFS(quota);
                 }
             };
-            storageInfo.queryUsageAndQuota(stType, checkQuota, qmError);
+            storageInfo.queryUsageAndQuota(checkQuota, qmError);
             var getFS = function(quota) {
                 requestFileSystem(stType, quota, displayFileSystem, fsError);
             };
@@ -188,7 +188,7 @@
                             for(var i = 0, len = fileSet.length; i < len; i++) {
                                 files.push(fileSet[i]);
                             }
-                            readFileList():
+                            readFileList();
                         }
                     }, fsError);
                 };
@@ -249,7 +249,7 @@
                     alert('You must enter a file name', 'Create Error');
                 }
             };
-            document.forms.create.addEventListener('submit', createFromSubmit, false);
+            document.forms.create.addEventListener('submit', createFormSubmit, false);
         } else {
             alert('File System API not supported', 'Unsupported');
         }
