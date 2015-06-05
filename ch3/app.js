@@ -109,6 +109,107 @@
             }
         };
         visualEditorToolbar.addEventListener('click', richTextAction, false);
+        window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem || window.mozRequestFileSystem || window.msRequestFileSystem || false;
+        window.storageInfo = navigator.persistentStorage || navigator.webkitPersistentStorage || navigator.mozPersistentStorage || navigator.msPersistentStorage || false;
+        var stType = window.PERSISTENT || 1,
+            stSize = (5*1024*1024),
+            fileSystem,
+            fileListEl = document.getElementById('files'),
+            currentFile;
+        var fsError = function(e) {
+            if(e.code === 9) {
+                alert('File name already exists.', 'File System Error');
+            } else {
+                alert('An unexpected error occurred. Error code: ' + e.code);
+            }
+        };
+        var qmError = function(e) {
+            if(e.code === 22) {
+                alert('Quota exceeded.', 'Quota Management Error');
+            } else {
+                alert('An unexpected error occurred. Error code: ' + e.code);
+            }
+        };
+        if(requestFileSystem && storageInfo) {
+            var checkQuota = function(currentUsage, quota) {
+                if(quota === 0) {
+                    storageInfo.requestQuota(stType, stSize, getFS, qmError);
+                } else {
+                    getFS(quota);
+                }
+            };
+            storageInfo.queryUsageAndQuota(stType, checkQuota, qmError);
+            var getFS = function(quota) {
+                requestFileSystem(stType, quota, displayFileSystem, fsError);
+            };
+            var displayFileSystem = function(fs) {
+                fileSystem = fs;
+                updateBrowserFilesList();
+                if(view === 'editor') {
+                    loadFile(fileName);
+                }
+            };
+            var displayBrowserFileList = function(files) {
+                fileListEl.innerHTML = '';
+                document.getElementById('file_count').innerHTML = files.length;
+                if(files.length > 0) {
+                    files.forEach(function(file, i) {
+                        var li = '<li id="li_' + i + '" draggable="true">' + file.name 
+                            + '<div><button id="view_' + i + '">View</button>'
+                            + '<button class="green" id="edit_' + i + '">Edit</button>'
+                            + '<button class="red" id="del_' + i + '">Delete</button>'
+                            + '</div></li>';
+                        fileListEl.insertAdjacentHTML('beforeend', li);
+                        var listItem = document.getElementById('li_' + i),
+                            viewBtn = document.getElementById('view_' + i),
+                            editBtn = document.getElementById('edit_' + i),
+                            deleteBtn = document.getElementById('del_' + i);
+                        var doDrag = function(e) { dragFile(file, e); };
+                        var doView = function() { viewFile(file); };
+                        var doEdit = function() { editFile(file); };
+                        var doDelete = function()  { deleteFile(file); };
+                        viewBtn.addEventListener('click', doView, false);
+                        editBtn.addEventListener('click', doEdit, false);
+                        deleteBtn.addEventListener('click', doDelete, false);
+                        listItem.addEventListener('dragstart', doDrag, false);
+                    });
+                } else {
+                    fileListEl.innerHTML = '<li class="empty">No files to display</li>';
+                }
+            };
+            var updateBrowserFilesList = function() {
+                var dirReader = fileSystem.root.createReader(),
+                    files = [];
+                var readFileList = function() {
+                    dirReader.readEntries(function(fileSet) {
+                        if(!fileSet.length) {
+                            displayBrowserFileList(files.sort());
+                        } else {
+                            for(var i = 0, len = fileSet.length; i < len; i++) {
+                                files.push(fileSet[i]);
+                            }
+                            readFileList():
+                        }
+                    }, fsError);
+                };
+                readFileList();
+            };
+            var loadFile = function(name) {
+                fileSystem.root.getFile(name, {}, function(fileEntry) {
+                    currentFile = fileEntry;
+                    fileEntry.file(function(file) {
+                        var reader = new FileReader();
+                        reader.onloadend = function(e) {
+                            updateVisualEditor(this.result);
+                            updateHtmlEditor(this.result);
+                        };
+                        reader.readAsText(file);
+                    }, fsError);
+                }, fsError);
+            };
+        } else {
+            alert('File System API not supported', 'Unsupported');
+        }
     };
     var init = function() {
         new SuperEditor();
