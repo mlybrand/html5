@@ -207,6 +207,49 @@
                     }, fsError);
                 }, fsError);
             };
+            var viewFile = function(file) {
+                window.open(file.toURL(), 'SuperEditorPreview', 'width=800,height==600');
+            };
+            var editFile = function(file) {
+                loadFile(file.name);
+                location.href = '#editor/' + file.name;
+            };
+            var deleteFile = function(file) {
+                var deleteSuccess = function() {
+                    alert('File ' + file.name + ' deleted successfully', 'File deleted');
+                    updateBrowserFilesList();
+                };
+                if(confirm('File will be deleted. Are you sure?', 'Confirm delete')) {
+                    file.remove(deleteSuccess, fsError);
+                }
+            };
+            var createFile = function(field) {
+                var config = {
+                    create: true,
+                    exclusive: true
+                };
+                var createSuccess = function(file) {
+                    alert('File ' + file.name + ' created successfully', 'File created');
+                    updateBrowserFilesList();
+                    field.value = '';
+                };
+                fileSystem.root.getFile(field.value, config, createSuccess, fsError);
+            };
+            var createFormSubmit = function(e) {
+                e.preventDefault();
+                var name = document.forms.create.name;
+                if(name.value.length > 0) {
+                    var len = name.value.length;
+                    if(name.value.substring(len-5, len) === '.html') {
+                        createFile(name);
+                    } else {
+                        alert('Only extension .html allowed', 'Create Error');
+                    }
+                } else {
+                    alert('You must enter a file name', 'Create Error');
+                }
+            };
+            document.forms.create.addEventListener('submit', createFromSubmit, false);
         } else {
             alert('File System API not supported', 'Unsupported');
         }
