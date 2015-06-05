@@ -346,6 +346,11 @@
             };
             fileDropZone.addEventListener('drop', importByDrop, false);
             fileDropZone.addEventListener('dragover', importDragOver, false);
+            var dragFile = function(file, e) {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.dropEffect = 'copy';
+                e.dataTransfer.setData('DownloadURL', 'appliction/octet-stream:' + file.name + ':' + file.toURL());
+            };
         } else {
             alert('File System API not supported', 'Unsupported');
         }
