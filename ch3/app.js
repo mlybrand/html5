@@ -329,6 +329,23 @@
             var previewBtn = document.getElementById('file_preview');
             saveBtn.addEventListener('click', saveFile, false);
             previewBtn.addEventListener('click', previewFile, false);
+            var fileDropZone = document.getElementById('filedrop');
+            var importByDrop = function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                var files = e.dataTransfer.files;
+                if(files.length > 0) {
+                    importFiles(files);
+                }
+            };
+            var importDragOver = function(e) {
+                e.preventDefault();
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.dropEffect = 'copy';
+                return false;
+            };
+            fileDropZone.addEventListener('drop', importByDrop, false);
+            fileDropZone.addEventListener('dragover', importDragOver, false);
         } else {
             alert('File System API not supported', 'Unsupported');
         }
