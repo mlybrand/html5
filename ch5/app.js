@@ -318,4 +318,11 @@
     window.addEventListener('load', function() {
         new Tasks();
     }, false);
+    
+    window.addEventListener('online', function() {
+        console.log('connected');
+    }, false);
+    window.addEventListener('offline', function() {
+        console.log('disconnected');
+    }, false);
 }());
