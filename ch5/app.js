@@ -305,6 +305,15 @@
                 });
             }
         };
+        if('applicationCache' in window) {
+            var appCache = window.applicationCache;
+            appCache.addEventListener('updateready', function() {
+                appCache.swapCache();
+                if (confirm('App update is available. Update now?')) {
+                    window.location.reload();
+                }
+            }, false);
+        }
     };
     window.addEventListener('load', function() {
         new Tasks();
